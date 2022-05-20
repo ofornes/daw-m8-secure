@@ -249,20 +249,16 @@ docker compose exec new-moodleweb bash
 | Path host | servei docker | volum docker | observacions
 | /var/local/volumes/mysql-data | dbmysql | /var/lib/mysql | Taules del servidor mysql
 | /var/local/volumes/wordpress-data | moodle | 
-| /var/local/volumes/moodle-data | moodle | 
+| /var/local/volumes/moodle-data | moodle | Part de data
+| /var/local/volumes/moodle-code | moodle | Part de codi
+| /var/local/volumes/nextcloud | nextcloud | Web
+| /var/local/volumes/odoo | odoo | Web
 |====================
 
 
 === Usuaris i passwords
 
-.Usuaris i passwords de databases
-[width="100%",options="header"]
-|====================
-| usuari | password | docker
-| root | aNYYmCW4 | dbmysql
-| wpadmin | 6wc4Pmjm | wordpress
-| moodle | 4p6rCSPJ | moodle
-|====================
+Els usuaris i passwords de databases s'especifiquen a l'arxiu encriptat link:webs/secure.env.gpg[secure.env.gpg]. És necessari la clau d'encriptat segura.
 
 === Relació de dominis
 

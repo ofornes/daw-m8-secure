@@ -5,7 +5,7 @@ services:
     build:
       context: .
       dockerfile: ./assets/dockerfiles/wordpress-dockerfile
-    container_name: wordpress
+    container_name: wordpress_dawm8
     restart: unless-stopped
     ports:
       - "9280:80"
@@ -13,6 +13,7 @@ services:
       - WORDPRESS_DB_HOST=dbmysql
       - WORDPRESS_DB_USER=wpadmin
       - WORDPRESS_DB_NAME=wordpress
+      - APACHE_SERVER_NAME=wordpress-daw8.fornes.cat
     volumes:
       - /var/local/volumes/wordpress-data:/var/www/html
     depends_on:
@@ -24,13 +25,14 @@ services:
     build:
       context: .
       dockerfile: ./assets/dockerfiles/moodle-dockerfile
-    container_name: moodle
+    container_name: moodle_dawm8
     restart: unless-stopped
     ports:
       - "9180:80"
     environment:
       - MOODLE_URL=https://moodle-daw8.fornes.cat
       - MOODLE_DATA_ROOT=/var/www/moodledata
+      - APACHE_SERVER_NAME=moodle-daw8.fornes.cat
     volumes:
       - /var/local/volumes/moodle-code:/var/www/html
       - /var/local/volumes/moodle-data:/var/www/moodledata
@@ -58,16 +60,53 @@ services:
       - OVERWRITEPROTOCOL=https
       - OVERWRITECLIURL=https://nextcloud-daw8.fornes.cat
       - OVERWRITEWEBROOT=/
+      - APACHE_SERVER_NAME=nextcloud-daw8.fornes.cat
     networks:
       - appnet
-  #### BASE DE DADES COMUNA
+  #### Odoo
+  odoo:
+    build:
+      context: .
+      dockerfile: ./assets/dockerfiles/odoo-dockerfile
+    container_name: odoo_dawm8
+    depends_on:
+      - dbpostgressql
+    ports:
+      - "9380:80"
+    volumes:
+      - /var/local/volumes/odoo-data:/var/lib/odoo
+    environment:
+      - HOST=dbpostgressql
+      - PORT=5432
+      - USER=odoo
+      - PASSWORD=$POSTGRES_PASSWORD
+      - DATABASE=odoodb
+      - PROXYMODE=no
+    networks:
+      - appnet
+  #### BASE DE DADES específica de odoo
+  dbpostgressql:
+    image: postgres:14-alpine
+    environment:
+      - POSTGRES_DB=odoodb
+      - POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+      - POSTGRES_USER=odoo
+    volumes:
+      - /var/local/volumes/postgresql:/var/lib/postgresql/data
+      - ./assets/scripts/init-postgres.sh:/docker-entrypoint-initdb.d/init-user-db.sh
+    restart: unless-stopped
+    networks:
+      - appnet
+  #### BASE DE DADES COMUNA de wordpress, nextcloud i moodle
   dbmysql:
     image: mysql:5.7
     container_name: dbmysql
     restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD
     volumes:
       - /var/local/volumes/mysql-data:/var/lib/mysql
-      - ./assets/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./assets/scripts/init-sql.sh:/docker-entrypoint-initdb.d/init-sql.sh
     networks:
       - appnet
 networks:

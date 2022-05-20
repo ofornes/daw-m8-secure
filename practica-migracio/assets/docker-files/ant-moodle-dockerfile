@@ -34,6 +34,8 @@ COPY ./assets/backups/moodle-db.dump.gz /var/www/moodledata/backups/moodle-db.du
 RUN tar xzf /var/www/moodledata/backups/moodle-code.tgz --preserve-permissions --same-owner -C /var/www/html --strip-components=1
 RUN tar xzf /var/www/moodledata/backups/moodle-dirs.tgz --preserve-permissions --same-owner -C /var/www/moodledata --strip-components=1
 RUN gunzip /var/www/moodledata/backups/moodle-db.dump.gz
+RUN chown -R www-data:www-data /var/www/html
+RUN chown -R www-data:www-data /var/www/moodledata
 
 COPY ./assets/scripts/utils.sh /usr/local/bin/utils.sh
 COPY ./assets/scripts/do-backup.sh /usr/local/bin/do-backup.sh

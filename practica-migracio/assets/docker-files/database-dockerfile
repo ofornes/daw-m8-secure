@@ -3,6 +3,9 @@ FROM postgres:$POSTGRES_VERSION
 
 EXPOSE 5432
 
+ENV MOODLE_USER moodle
+ENV MOODLE_PASSWORD moodle
+
 VOLUME ["/docker-entrypoint-initdb.d/"]
 
 RUN apt-get update

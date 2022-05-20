@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Configuració apache
+echo "ServerName ${APACHE_SERVER_NAME}" > /etc/apache2/conf-available/servername.conf
+a2enconf servername.conf
+
 # Iniciar el servei de CRON
 service cron start
 
