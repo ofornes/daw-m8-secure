@@ -1,0 +1,75 @@
+version: '3'
+services:
+  #### Wordpress
+  wordpress:
+    build:
+      context: .
+      dockerfile: ./assets/dockerfiles/wordpress-dockerfile
+    container_name: wordpress
+    restart: unless-stopped
+    ports:
+      - "9280:80"
+    environment:
+      - WORDPRESS_DB_HOST=dbmysql
+      - WORDPRESS_DB_USER=wpadmin
+      - WORDPRESS_DB_NAME=wordpress
+    volumes:
+      - /var/local/volumes/wordpress-data:/var/www/html
+    depends_on:
+      - dbmysql
+    networks:
+      - appnet
+  #### Moodle
+  moodle:
+    build:
+      context: .
+      dockerfile: ./assets/dockerfiles/moodle-dockerfile
+    container_name: moodle
+    restart: unless-stopped
+    ports:
+      - "9180:80"
+    environment:
+      - MOODLE_URL=https://moodle-daw8.fornes.cat
+      - MOODLE_DATA_ROOT=/var/www/moodledata
+    volumes:
+      - /var/local/volumes/moodle-code:/var/www/html
+      - /var/local/volumes/moodle-data:/var/www/moodledata
+    depends_on:
+      - dbmysql
+    networks:
+      - appnet
+  #### Nextcloud (disc cloud)
+  nextcloud:
+    image: nextcloud
+    restart: unless-stopped
+    ports:
+      - 9480:80
+    depends_on:
+      - dbmysql
+    volumes:
+      - /var/local/volumes/nextcloud:/var/www/html
+    environment:
+      - MYSQL_PASSWORD=$NEXTCLOUD_MYSQL_PASSWORD
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+      - MYSQL_HOST=dbmysql
+      - TRUSTED_PROXIES=192.168.32.1
+      - OVERWRITEHOST=nextcloud-daw8.fornes.cat
+      - OVERWRITEPROTOCOL=https
+      - OVERWRITECLIURL=https://nextcloud-daw8.fornes.cat
+      - OVERWRITEWEBROOT=/
+    networks:
+      - appnet
+  #### BASE DE DADES COMUNA
+  dbmysql:
+    image: mysql:5.7
+    container_name: dbmysql
+    restart: unless-stopped
+    volumes:
+      - /var/local/volumes/mysql-data:/var/lib/mysql
+      - ./assets/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - appnet
+networks:
+  appnet:
+    driver: bridge

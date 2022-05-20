@@ -1,0 +1,67 @@
+FROM ubuntu:20.04
+
+## No són permanents! VOLUME ["/var/www/html","/var/www/moodledata"]
+
+EXPOSE 80 443 22
+
+# Let the container know that there is no tty
+ENV DEBIAN_FRONTEND noninteractive
+
+# This should be overridden on running moodle container
+ENV MOODLE_URL http://localhost
+ENV SERVER_NAME localhost
+
+# Instal·lar elements necessaris per a moodle
+RUN apt-get update
+RUN apt-get install -y lsb-release gnupg2
+RUN apt-key adv --receive-keys --keyserver keyserver.ubuntu.com 7FCC7D46ACCC4CF8
+RUN echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list
+
+RUN apt-get update
+RUN apt-get -y install pwgen python-setuptools curl git unzip apache2 php postgresql-client-14 \
+		php-gd libapache2-mod-php postfix wget supervisor php-pgsql curl libcurl4 \
+		libcurl4-openssl-dev php-curl php-xmlrpc php-intl git-core php-xml \
+		php-mbstring php-zip php-soap cron language-pack-ca language-pack-ca-base openssh-client gzip tar vim
+
+# Preparar sources i directoris de moodle
+RUN rm /var/www/html/index.html
+
+# Dades per a nodrir la web
+RUN mkdir -p /var/www/moodledata/backups
+COPY ./assets/backups/moodle-code.tgz /var/www/moodledata/backups/moodle-code.tgz
+COPY ./assets/backups/moodle-dirs.tgz /var/www/moodledata/backups/moodle-dirs.tgz
+COPY ./assets/backups/moodle-db.dump.gz /var/www/moodledata/backups/moodle-db.dump.gz
+RUN tar xzf /var/www/moodledata/backups/moodle-code.tgz --preserve-permissions --same-owner -C /var/www/html --strip-components=1
+RUN tar xzf /var/www/moodledata/backups/moodle-dirs.tgz --preserve-permissions --same-owner -C /var/www/moodledata --strip-components=1
+RUN gunzip /var/www/moodledata/backups/moodle-db.dump.gz
+
+COPY ./assets/scripts/utils.sh /usr/local/bin/utils.sh
+COPY ./assets/scripts/do-backup.sh /usr/local/bin/do-backup.sh
+COPY ./assets/scripts/do-restore.sh /usr/local/bin/do-restore.sh
+COPY ./assets/scripts/start-moodle.sh /etc/apache2/start-moodle.sh
+RUN chmod +x /etc/apache2/start-moodle.sh
+RUN chmod +x /usr/local/bin/utils.sh /usr/local/bin/do-restore.sh /usr/local/bin/do-backup.sh /etc/apache2/start-moodle.sh
+
+# Preparar idioma i timezone
+RUN localedef -i ca_ES -c -f UTF-8 -A /usr/share/locale/locale.alias ca_ES.UTF-8
+RUN echo "Europe/Madrid" > /etc/timezone
+RUN /bin/ln -fs /usr/share/zoneinfo/Europe/Madrid /etc/localtime
+RUN dpkg-reconfigure -f noninteractive tzdata
+ENV LANG ca_ES.utf8
+
+# Enable SSL, moodle requires it
+# if using proxy, don't need actually secure connection
+RUN a2enmod ssl && a2ensite default-ssl 
+
+# Cleanup, this is ran to reduce the resulting size of the image.
+RUN apt-get clean autoclean && apt-get autoremove -y
+
+# Crontab
+RUN echo "5 * * * * /usr/bin/php /var/www/html/admin/cli/cron.php" | crontab -
+
+# Preparar la configuració SSH client
+COPY ./assets/ssh/moodle-key.pub /root/moodle-key.pub
+COPY ./assets/ssh/moodle-key /root/moodle-key
+RUN chmod u+rw,g-rw,o-rw /root/moodle-key*
+
+CMD ["/etc/apache2/start-moodle.sh"]

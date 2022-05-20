@@ -1,0 +1,33 @@
+FROM ubuntu:20.04
+
+VOLUME ["/var/www/html","/var/www/moodledata"]
+
+EXPOSE 80
+
+# Let the container know that there is no tty
+ENV DEBIAN_FRONTEND noninteractive
+
+# Instal·lar elements necessaris per a moodle i per a restaurar
+RUN apt-get update
+RUN apt-get install -y lsb-release gnupg2
+RUN apt-get -y install cron ssh-client language-pack-ca language-pack-ca-base gzip wget tar vim mysql-client \
+apache2 libapache2-mod-php graphviz aspell ghostscript clamav php7.4-pspell php7.4-curl php7.4-gd php7.4-intl \
+php7.4-mysql php7.4-xml php7.4-xmlrpc php7.4-ldap php7.4-zip php7.4-soap php7.4-mbstring
+
+# Preparar idioma i timezone
+RUN localedef -i ca_ES -c -f UTF-8 -A /usr/share/locale/locale.alias ca_ES.UTF-8
+RUN echo "Europe/Madrid" > /etc/timezone
+RUN /bin/ln -fs /usr/share/zoneinfo/Europe/Madrid /etc/localtime
+RUN dpkg-reconfigure -f noninteractive tzdata
+ENV LANG ca_ES.utf8
+
+# Cleanup, this is ran to reduce the resulting size of the image.
+RUN apt-get clean autoclean && apt-get autoremove -y
+
+# Crontab
+RUN echo "5 * * * * /usr/bin/php /var/www/html/admin/cli/cron.php" | crontab -
+
+COPY ./assets/scripts/start-moodle.sh /etc/apache2/start-moodle.sh
+RUN chmod +x /etc/apache2/start-moodle.sh
+# Punt d'entrada
+CMD ["/etc/apache2/start-moodle.sh"]

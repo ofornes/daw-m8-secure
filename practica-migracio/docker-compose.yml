@@ -1,0 +1,80 @@
+version: '3'
+services:
+  new-moodleweb:
+    build:
+      context: .
+      dockerfile: ./assets/docker-files/new-moodle-dockerfile
+    container_name: practica_moodle-new-web
+    restart: unless-stopped
+    ports:
+      - "8180:443"
+      - "8022:22"
+    environment:
+      - SERVER_NAME=localhost:8180
+      - MOODLE_URL=https://moodlenew-daw8.fornes.cat
+      - MOODLE_DATA_ROOT=/var/www/moodledata
+      - DB_PORT_5432_TCP_ADDR=postgresdb
+      - DB_PORT_5432_TCP_PORT=5432
+      - DB_ENV_POSTGRES_DB=moodle
+      - DB_ENV_POSTGRES_USER=moodle
+      - DB_ENV_POSTGRES_PASSWORD=secret
+    depends_on:
+      - postgresdb
+    networks:
+      - db-net
+  ant-moodleweb:
+    build:
+      context: .
+      dockerfile: ./assets/docker-files/ant-moodle-dockerfile
+    container_name: practica_moodle-ant-web
+    restart: unless-stopped
+    ports:
+      - "8280:443"
+    environment:
+      - SERVER_NAME=localhost:8280
+      - MOODLE_URL=https://moodleant-daw8.fornes.cat
+      - MOODLE_DATA_ROOT=/var/www/moodledata
+      - DB_PORT_5432_TCP_ADDR=postgresdbant
+      - DB_PORT_5432_TCP_PORT=5432
+      - DB_ENV_POSTGRES_DB=moodle
+      - DB_ENV_POSTGRES_USER=moodle
+      - DB_ENV_POSTGRES_PASSWORD=secret
+    depends_on:
+      - postgresdb
+    networks:
+      - db-net
+  postgresdb:
+    container_name: practica_postgresql-web
+    build:
+      context: .
+      dockerfile: assets/docker-files/database-dockerfile
+      args:
+        POSTGRES_VERSION: "14.2"
+    restart: always
+    networks:
+      - db-net
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgresadmin
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - ./assets/sql/init-moodle.sql:/docker-entrypoint-initdb.d/init-moodle.sql
+  postgresdbant:
+    container_name: practica_postgresql-web-ant
+    build:
+      context: .
+      dockerfile: assets/docker-files/database-dockerfile
+      args:
+        POSTGRES_VERSION: "14.2"
+    restart: always
+    networks:
+      - db-net
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgresadmin
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - ./assets/sql/init-moodle.sql:/docker-entrypoint-initdb.d/init-moodle.sql
+networks:
+  db-net:
+    driver: bridge

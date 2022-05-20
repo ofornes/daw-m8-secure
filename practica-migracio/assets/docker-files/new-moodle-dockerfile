@@ -1,0 +1,71 @@
+FROM ubuntu:20.04
+
+## No és permanent VOLUME ["/var/www"]
+
+EXPOSE 80 443 22
+
+# Let the container know that there is no tty
+ENV DEBIAN_FRONTEND noninteractive
+
+# This should be overridden on running moodle container
+ENV MOODLE_URL http://localhost
+ENV SERVER_NAME localhost
+
+# Instal·lar elements necessaris per a moodle i per a restaurar
+RUN apt-get update
+RUN apt-get install -y lsb-release gnupg2
+RUN apt-key adv --receive-keys --keyserver keyserver.ubuntu.com 7FCC7D46ACCC4CF8
+RUN echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list
+
+RUN apt-get update
+RUN apt-get -y install cron language-pack-ca language-pack-ca-base ssh gzip tar vim postgresql-client-14
+RUN apt-get -y install pwgen python-setuptools curl git unzip apache2 php php-gd libapache2-mod-php \
+postfix wget supervisor php-pgsql curl libcurl4 libcurl4-openssl-dev php-curl php-xmlrpc php-intl \
+git-core php-xml php-mbstring php-zip php-soap
+
+# Preparar sources, directoris i configuració de moodle
+RUN mkdir -p /var/www/moodledata/backups
+
+COPY ./assets/html/new-index.html /var/www/html/index.html
+COPY ./assets/scripts/utils.sh /usr/local/bin/utils.sh
+COPY ./assets/scripts/do-backup.sh /usr/local/bin/do-backup.sh
+COPY ./assets/scripts/do-restore.sh /usr/local/bin/do-restore.sh
+COPY ./assets/scripts/start-moodle.sh /etc/apache2/start-moodle.sh
+RUN chmod +x /etc/apache2/start-moodle.sh
+RUN chmod +x /usr/local/bin/utils.sh /usr/local/bin/do-restore.sh /usr/local/bin/do-backup.sh /etc/apache2/start-moodle.sh
+RUN chown -R www-data:www-data /var/www
+
+# Preparar idioma i timezone
+RUN localedef -i ca_ES -c -f UTF-8 -A /usr/share/locale/locale.alias ca_ES.UTF-8
+RUN echo "Europe/Madrid" > /etc/timezone
+RUN /bin/ln -fs /usr/share/zoneinfo/Europe/Madrid /etc/localtime
+RUN dpkg-reconfigure -f noninteractive tzdata
+ENV LANG ca_ES.utf8
+
+# Enable SSL, moodle requires it
+# if using proxy, don't need actually secure connection
+RUN a2enmod ssl && a2ensite default-ssl 
+
+# Cleanup, this is ran to reduce the resulting size of the image.
+RUN apt-get clean autoclean && apt-get autoremove -y
+
+# Preparar l'usuari moodle i l'ssh
+RUN adduser --shell /bin/bash --home /home/moodle moodle
+RUN echo moodle:moodle | chpasswd -
+RUN mkdir /home/moodle/.ssh
+COPY ./assets/ssh/moodle-key /home/moodle/.ssh/moodle-key
+COPY ./assets/ssh/moodle-key.pub /home/moodle/.ssh/moodle-key.pub
+COPY ./assets/ssh/moodle-key.pub /home/moodle/.ssh/authorized_keys
+RUN chown -R moodle:moodle /home/moodle/.ssh
+RUN chmod g-r,o-r,u+rw /home/moodle/.ssh/*
+COPY ./assets/ssh/sshd_secure.config /etc/ssh/sshd_config.d/sshd_secure.conf
+
+# Reiniciar el servei per a agafar la configuració de securització
+RUN service ssh restart
+
+# Afegir el crontab del moodle
+RUN echo "5 * * * * /usr/bin/php /var/www/html/admin/cli/cron.php" | crontab -
+RUN service cron start
+
+# Punt d'entrada
+CMD ["/etc/apache2/start-moodle.sh"]

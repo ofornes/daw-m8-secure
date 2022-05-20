@@ -1,0 +1,16 @@
+ARG POSTGRES_VERSION
+FROM postgres:$POSTGRES_VERSION
+
+EXPOSE 5432
+
+VOLUME ["/docker-entrypoint-initdb.d/"]
+
+RUN apt-get update
+RUN apt-get -y install task-catalan gzip tar vim
+
+# Preparar idioma i timezone
+RUN localedef -i ca_ES -c -f UTF-8 -A /usr/share/locale/locale.alias ca_ES.UTF-8
+RUN echo "Europe/Madrid" > /etc/timezone
+RUN /bin/ln -fs /usr/share/zoneinfo/Europe/Madrid /etc/localtime
+RUN dpkg-reconfigure -f noninteractive tzdata
+ENV LANG ca_ES.utf8
