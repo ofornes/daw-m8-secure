@@ -20,6 +20,7 @@ pip3 install wheel
 pip3 install -r odoo/requirements.txt
 deactivate
 
+echo "Iniciant el servei ODOO..."
 cd /var/lib/odoo
 touch odoo.log
 tail -f odoo.log &
@@ -31,6 +32,6 @@ exec odoo-venv/bin/python3 odoo/odoo-bin \
 --db_password "${PASSWORD}" \
 --db_user ${USER} \
 --database ${DATABASE} \
---addons-path /var/lib/odoo/addons \
+--addons-path /var/lib/odoo/odoo/addons \
 --http-port 80 \
 ${FLG_PROXY}

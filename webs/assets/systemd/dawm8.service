@@ -4,13 +4,12 @@ After=docker.service network-online.target
 Requires=docker.service network-online.target
 
 [Service]
-WorkingDirectory=/usr/share/daw-m8-secure/webs
 Type=oneshot
 RemainAfterExit=yes
 
-ExecStart=/usr/bin/docker compose up -d
+ExecStart=/home/ofornes/daw/daw-m8-secure/webs/assets/scripts/dawm8-start.sh
 
-ExecStop=/usr/bin/docker compose down
+ExecStop=/home/ofornes/daw/daw-m8-secure/webs/assets/scripts/dawm8-stop.sh
 
 [Install]
 WantedBy=multi-user.target

@@ -1,0 +1,21 @@
+FROM ubuntu:20.04
+
+# Let the container know that there is no tty
+ENV DEBIAN_FRONTEND noninteractive
+
+RUN apt-get update
+RUN apt-get install -y lsb-release gnupg2 gzip wget tar vim git apt-utils
+RUN apt-get install -y language-pack-ca language-pack-ca-base \
+    python3-pip build-essential python3-dev python3-venv \
+    python3-wheel libfreetype6-dev libxml2-dev libzip-dev libldap2-dev libsasl2-dev \
+    python3-setuptools node-less libjpeg-dev zlib1g-dev libpq-dev \
+    libxslt1-dev libldap2-dev libtiff5-dev libjpeg8-dev libopenjp2-7-dev \
+    liblcms2-dev libwebp-dev libharfbuzz-dev libfribidi-dev libxcb1-dev wkhtmltopdf
+
+RUN localedef -i ca_ES -c -f UTF-8 -A /usr/share/locale/locale.alias ca_ES.UTF-8
+RUN echo "Europe/Madrid" > /etc/timezone
+RUN /bin/ln -fs /usr/share/zoneinfo/Europe/Madrid /etc/localtime
+RUN dpkg-reconfigure -f noninteractive tzdata
+ENV LANG ca_ES.utf8
+# Cleanup, this is ran to reduce the resulting size of the image.
+RUN apt-get clean autoclean && apt-get autoremove -y
