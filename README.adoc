@@ -181,13 +181,27 @@ Tot creat subdominis per a cadascuna de les aplicacions:
 
 Internament s'utilitza el proxy-reverse d'apache per a poder _connectar_ els dominis amb els servidors aixecats amb docker.
 
-== Descripció de les solucions
+== Descripció de la solució
+
+=== Desplegament de les aplicacions
 
 Com s'ha explicat a <<Estructura de desplegament de les aplicacions>>, s'utilitzaran contenidors dockers amb cada aplicació. Davant d'aquests contenidors s'hi instal·larà un proxy amb _apache_ que actuarà entre les crides d'internets i els corresponents servidors interns.
+
+Les connexions internes seran amb http, per tal de fer-ho més eficient i, donat que són internes, no ha de suposar cap risc.
+
+Es configurarà l'apache per tal que les peticions als dominis pel port 80 siguin redirigides al port 443.
 
 La imatge següent il·lustra la solució:
 
 image::docs/esquema.png[Esquema de la solució]
+
+=== Securització del host principal
+
+Per davant del proxy, es configurarà un firewall que només permitirà l'accés al port 80 443 i impedirà l'accés a la resta de ports.
+
+D'aquesta manera protegirem l'accés extern als ports 9xxx que hem habilitat per als dockers.
+
+A més d'aquests dos ports, també habilitarem el pas als ports necessaris per a altres serveis, com ara ssh, smtp, etc.
 
 
 === Procés de migració
@@ -237,7 +251,16 @@ I ara hem d'anar a la nova màquina a restaurar:
 docker compose exec new-moodleweb bash
 ----
 
+=== Seguretat
 
+S'ha securitzat el sistema SSH de manera que:
+
+- No es pugui accedir amb usuari root
+- No es pugui accedir amb password, sinó que s'ha de fer servir una clau gpg determinada
+- Passats 3 minuts d'inactivitat de la sessió, es desconnecta automàticament
+- Només es permet l'accés a l'usuari 'moodle' (encarregat de la restauració)
+
+S'ha generat una clau gpg específica per a fer la transferència
 
 == Referències
 
