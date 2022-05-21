@@ -33,13 +33,6 @@ RUN mkdir /var/lib/odoo
 RUN cd /var/lib/odoo
 RUN git clone https://www.github.com/odoo/odoo --depth 1 --branch 15.0 odoo
 
-RUN cd /var/lib/odoo
-RUN python3 -m venv odoo-venv
-RUN source odoo-venv/bin/activate
-RUN pip3 install wheel
-RUN pip3 install -r odoo/requirements.txt
-RUN deactivate
-
 # Cleanup, this is ran to reduce the resulting size of the image.
 RUN apt-get clean autoclean && apt-get autoremove -y
 

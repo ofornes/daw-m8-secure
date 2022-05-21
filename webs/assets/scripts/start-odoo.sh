@@ -14,6 +14,13 @@ else
 fi
 
 cd /var/lib/odoo
+python3 -m venv odoo-venv
+source odoo-venv/bin/activate
+pip3 install wheel
+pip3 install -r odoo/requirements.txt
+deactivate
+
+cd /var/lib/odoo
 touch odoo.log
 tail -f odoo.log &
 exec odoo-venv/bin/python3 odoo/odoo-bin \

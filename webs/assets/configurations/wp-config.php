@@ -17,7 +17,8 @@
  *
  * @package WordPress
  */
-
+$public_url         = 'https://wordpress-daw8.fornes.cat';
+$production_server     = 'localhost';
 // ** Database settings - You can get this info from your web host ** //
 /** The name of the database for WordPress */
 define( 'DB_NAME', getenv('WORDPRESS_DB_NAME') );
