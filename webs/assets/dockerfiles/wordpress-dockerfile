@@ -30,6 +30,11 @@ ENV LANG ca_ES.utf8
 # Cleanup, this is ran to reduce the resulting size of the image.
 RUN apt-get clean autoclean && apt-get autoremove -y
 
+## Portar el codi, per si un cas
+RUN mkdir /usr/local/wordpress
+COPY ./assets/sources/wordpress.tar.gz /usr/local/wordpress
+COPY ./assets/configurations/wp-config.php /var/www/html
+RUN chown -R www-data:www-data /usr/local/wordpress /var/www/html
 COPY ./assets/scripts/start-apache.sh /etc/apache2/start-apache.sh
 RUN chmod +x /etc/apache2/start-apache.sh
 # Punt d'entrada

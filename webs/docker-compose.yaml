@@ -13,6 +13,7 @@ services:
       - WORDPRESS_DB_HOST=dbmysql
       - WORDPRESS_DB_USER=wpadmin
       - WORDPRESS_DB_NAME=wordpress
+      - WORDPRESS_DB_PASSWORD=${WORDPRESS_DB_PASSWORD}
       - APACHE_SERVER_NAME=wordpress-daw8.fornes.cat
     volumes:
       - /var/local/volumes/wordpress-data:/var/www/html
@@ -33,6 +34,7 @@ services:
       - MOODLE_URL=https://moodle-daw8.fornes.cat
       - MOODLE_DATA_ROOT=/var/www/moodledata
       - APACHE_SERVER_NAME=moodle-daw8.fornes.cat
+      - MOODLE_DB_PASSWORD=$MOODLE_DB_PASSWORD
     volumes:
       - /var/local/volumes/moodle-code:/var/www/html
       - /var/local/volumes/moodle-data:/var/www/moodledata
