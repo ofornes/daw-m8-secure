@@ -9,6 +9,7 @@ function dbsetenv() {
     export DB_PWD=${DB_ENV_POSTGRES_PASSWORD}
 }
 function createpgpass() {
+    dbsetenv
     if [[ ! -f ~/.pgpass ]]; then
         echo "${DB_HOST}:${DB_PORT}:${DB_DATABASE}:${DB_USER}:${DB_PWD}" > ~/.pgpass
         chmod 0600 ~/.pgpass
@@ -17,6 +18,7 @@ function createpgpass() {
 
 # Wait for database server
 function wait-postgres() {
+    dbsetenv
     createpgpass
 
     DOK=-1
@@ -42,6 +44,7 @@ function wait-postgres() {
 
 # Restore database
 function restore-db() {
+    dbsetenv
     RETVAL=0
 
     if [ -f "$1" ]; then
@@ -73,6 +76,7 @@ function restore-db() {
 }
 
 function backup-db() {
+    dbsetenv
     createpgpass
 
     if [ $? -eq 1 ]; then
@@ -86,6 +90,7 @@ function backup-db() {
 }
 
 function backup-files() {
+    dbsetenv
     RETVAL=0
 
     tar czf moodle-code.tgz -C /var/www html
@@ -95,6 +100,7 @@ function backup-files() {
 }
 
 function restore-files() {
+    dbsetenv
     tar xzf moodle-code.tgz --preserve-permissions --same-owner -C /var/www/html --strip-components=1
     tar xzf moodle-dirs.tgz  --preserve-permissions --same-owner -C /var/www/moodledata --strip-components=1
 }
