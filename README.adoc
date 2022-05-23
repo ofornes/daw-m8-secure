@@ -281,7 +281,7 @@ S'ha generat una clau gpg específica per a fer la transferència
 
 === Usuaris i passwords
 
-Els usuaris i passwords de databases s'especifiquen a l'arxiu encriptat link:webs/secure.env.gpg[secure.env.gpg]. És necessari la clau d'encriptat segura.
+Els usuaris i passwords de databases s'especifiquen a l'arxiu encriptat link:webs/environment.gpg[environment.gpg]. És necessari la clau d'encriptat segura.
 
 === Relació de dominis
 
